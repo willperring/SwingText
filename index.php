@@ -31,6 +31,14 @@
                 font-weight: bold;
                 text-align: center;
                 text-shadow: 2px 4px 4px rgba(0,0,0,0.4);
+
+                -webkit-perspective-origin: center top;
+                -moz-perspective-origin: center top;
+                perspective-origin: center-top;
+
+                -webkit-perspective: 800px;
+                -moz-perspective: 800px;
+                perspective: 800px;
             }
 
         </style>

@@ -7,6 +7,13 @@
 
         };
 
+    /**
+     *  Resource to allocate client-related information
+     *
+     *  Keys should be assigned as self-executing functions that return false if unsupported.
+     *  Tests are executed pre DOM-ready, so shouldn't rely on elements in the body to complete
+     */
+
     var support = {};
 
     support.propertyPrefix = (function() {
@@ -22,6 +29,7 @@
                 return vendors[v];
             }
         }
+
         return false;
     })();
 
@@ -31,14 +39,36 @@
         return support.propertyPrefix + property;
     };
 
+    var applyVendorPrefixes = function( css ) {
+        var prefixed = {};
+        for( var prop in css ) {
+            // only vendorise rules starting with capitals
+            if( /^[A-Z]/.test( prop ) ) 
+                prefixed[ getVendorProperty(prop) ] = css[prop];
+            else
+                prefixed[ prop ] = css[prop];
+        } console.log( prefixed );
+        return prefixed;
+    }
+
+    /**
+     *  Swing Controller Constructor
+     *
+     *
+     */
+
     var SwingController = function( element ) {
 
         var animating = false,
             occupied  = false;
 
-        var _queue = [];
+        var _queue   = [],
+            _letters = null;
 
         var _setUp = function(text) {
+
+            if( support.propertyPrefix === false )
+                return element.html( text );
 
             var characters = text.split(''),
                 html       = "";
@@ -50,14 +80,45 @@
             }
 
             element.html( html );
-        };
+            _letters = element.find('span');
 
-        var _animateIn = function() {};
+            var startingCss = {
+                display             : 'inline-block',
+                Transform           : 'rotateX(-81deg)',
+                TransformOrigin     : 'center top',
+                TransformStyle      : 'preserve-3d',
+                BackfaceVisibility  : 'hidden'
+            };
+
+            startingCss = applyVendorPrefixes( startingCss );
+            _letters.css( startingCss );
+        };
 
         var _animateOut = function() {};
 
+        var _animateIn = function() {
+
+            if( _letters == null || !_letters.length )
+                return;
+
+            _letters.each( function(index) {
+
+                var letter = $(this);
+
+                var cssProps = {
+                    Transform : 'rotateX(0deg)'
+                };
+
+                cssProps = applyVendorPrefixes( cssProps );
+
+                letter.animate( cssProps, 1000 );
+
+            });
+        };
+
         var _performRoutine = function( text, options ) {
             _setUp( text );
+            _animateIn();
         };
 
         this.display = function(text, options) {
@@ -74,7 +135,19 @@
             _performRoutine( text, options );
         };
 
+        var containerCss = {};
+        containerCss[ getVendorProperty('BackfaceVisibility') ] = 'hidden';
+        containerCss[ getVendorProperty('TransformStyle') ]     = 'preserve-3d';
+
+        element.css( containerCss );
+
     };
+
+    /**
+     *  Factory method, attached to the jQuery function space
+     *
+     *
+     */
 
     $.fn.swing = function( text, options ) {
         $(this).each( function() {
